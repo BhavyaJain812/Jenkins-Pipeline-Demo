@@ -1,43 +1,40 @@
 pipeline {
     agent any
 
+    environment {
+        // Load the webhook URL from Jenkins credentials
+        SLACK_WEBHOOK_URL = credentials('slack-webhook')
+    }
+
     stages {
         stage('Build') {
             steps {
-                echo '🔨 Building the project...'
-            }
-        }
-
-        stage('Test') {
-            steps {
-                echo '🧪 Running tests...'
+                echo 'Running build step...'
+                // Simulate a build step
+                sh 'exit 0' // Change to 'exit 1' to simulate failure
             }
         }
     }
 
     post {
         success {
-            withCredentials([string(credentialsId: 'slack-webhook', variable: 'WEBHOOK_URL')]) {
-                script {
-                    def payload = '{"text": "✅ Build *SUCCESSFUL* for job: ' + env.JOB_NAME + ' #'+ env.BUILD_NUMBER + '"}'
-                    httpRequest httpMode: 'POST',
-                                url: "${WEBHOOK_URL}",
-                                requestBody: payload,
-                                contentType: 'APPLICATION_JSON'
-                }
+            script {
+                slackNotify("✅ Build Succeeded in Job: ${env.JOB_NAME} #${env.BUILD_NUMBER}")
             }
         }
-
         failure {
-            withCredentials([string(credentialsId: 'slack-webhook', variable: 'WEBHOOK_URL')]) {
-                script {
-                    def payload = '{"text": "❌ Build *FAILED* for job: ' + env.JOB_NAME + ' #'+ env.BUILD_NUMBER + '"}'
-                    httpRequest httpMode: 'POST',
-                                url: "${WEBHOOK_URL}",
-                                requestBody: payload,
-                                contentType: 'APPLICATION_JSON'
-                }
+            script {
+                slackNotify("❌ Build Failed in Job: ${env.JOB_NAME} #${env.BUILD_NUMBER}")
             }
         }
     }
+}
+
+def slackNotify(String message) {
+    // Send message to Slack using webhook
+    sh """
+        curl -X POST -H 'Content-type: application/json' \
+        --data '{"text": "${message}"}' \
+        ${SLACK_WEBHOOK_URL}
+    """
 }
