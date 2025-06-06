@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     environment {
-        SLACK_WEBHOOK_URL = credentials('slack-webhook')
+        SLACK_WEBHOOK = credentials('slack-webhook')
     }
 
     stages {
@@ -27,18 +27,18 @@ pipeline {
 
     post {
         success {
-            slackSend(
-                color: 'good',
-                message: "✅ *Build Successful*: Job '${env.JOB_NAME} [#${env.BUILD_NUMBER}]' ran successfully.\nSee: ${env.BUILD_URL}",
-                webhookUrl: SLACK_WEBHOOK_URL
-            )
+            sh """
+                curl -X POST -H 'Content-type: application/json' \\
+                --data '{"text":"✅ *Build Succeeded* for Job: ${env.JOB_NAME} #${env.BUILD_NUMBER}\\n${env.BUILD_URL}"}' \\
+                ${SLACK_WEBHOOK}
+            """
         }
         failure {
-            slackSend(
-                color: 'danger',
-                message: "❌ *Build Failed*: Job '${env.JOB_NAME} [#${env.BUILD_NUMBER}]' failed.\nCheck logs: ${env.BUILD_URL}",
-                webhookUrl: SLACK_WEBHOOK_URL
-            )
+            sh """
+                curl -X POST -H 'Content-type: application/json' \\
+                --data '{"text":"❌ *Build Failed* for Job: ${env.JOB_NAME} #${env.BUILD_NUMBER}\\n${env.BUILD_URL}"}' \\
+                ${SLACK_WEBHOOK}
+            """
         }
     }
 }
