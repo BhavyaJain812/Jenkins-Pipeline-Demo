@@ -27,4 +27,3 @@ pipeline {
                       message: "Build Failed: ${env.JOB_NAME} #${env.BUILD_NUMBER}"
         }
     }
-}
