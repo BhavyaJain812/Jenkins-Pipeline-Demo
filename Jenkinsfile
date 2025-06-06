@@ -2,44 +2,28 @@ pipeline {
     agent any
 
     stages {
-        stage('Clone') {
-            steps {
-                echo '📥 Cloning repository...'
-            }
-        }
         stage('Build') {
             steps {
-                echo '🔨 Building the project...'
+                echo 'Building...'
             }
         }
         stage('Test') {
             steps {
-                echo '🧪 Running tests...'
+                echo 'Testing...'
             }
         }
     }
 
     post {
-        always {
-            slackSend (
-                channel: '#all-jenkinsdemo',
-                color: '#439FE0',
-                message: "ℹ️ FINISHED: *${env.JOB_NAME}* #${env.BUILD_NUMBER} \n🔗 <${env.BUILD_URL}|View Build>"
-            )
-        }
         success {
-            slackSend (
-                channel: '#all-jenkinsdemo',
-                color: 'good',
-                message: "✅ SUCCESS: *${env.JOB_NAME}* #${env.BUILD_NUMBER} \n🔗 <${env.BUILD_URL}|View Build>"
-            )
+            slackSend channel: '#all-jenkinsdemo', 
+                      tokenCredentialId: 'slack-webhook', 
+                      message: "Build Successful: ${env.JOB_NAME} #${env.BUILD_NUMBER}"
         }
         failure {
-            slackSend (
-                channel: '#all-jenkinsdemo',
-                color: 'danger',
-                message: "❌ FAILURE: *${env.JOB_NAME}* #${env.BUILD_NUMBER} \n🔗 <${env.BUILD_URL}|View Build>"
-            )
+            slackSend channel: '#all-jenkinsdemo', 
+                      tokenCredentialId: 'slack-webhook', 
+                      message: "Build Failed: ${env.JOB_NAME} #${env.BUILD_NUMBER}"
         }
     }
 }
